@@ -1,19 +1,21 @@
-# client.py
-import requests
+import asyncio
 
-# Send the image to the async server for processing
-response = requests.post('http://127.0.0.1:8080/process', files={'image': open('/home/dino/PycharmProjects/compu2/tp2/fallout.jpeg', 'rb')})
-task_id = response.json()['task_id']
 
-# Check the status of the task
-status_response = requests.get(f'http://127.0.0.1:8080/status/{task_id}')
-while status_response.json()['status'] == 'processing':
-    status_response = requests.get(f'http://127.0.0.1:8080/status/{task_id}')
+async def send_image(image_path):
+    reader, writer = await asyncio.open_connection('localhost', 8000)
 
-# Save the processed image to a file
-if status_response.status_code == 200:
-    with open('output_image.jpg', 'wb') as f:
-        f.write(status_response.content)
-    print("Processed image saved as output_image.jpg")
-else:
-    print("Failed to retrieve the processed image")
+    with open(image_path, 'rb') as f:
+        writer.write(f.read())
+
+    await writer.drain()
+    processed_data = await reader.read(10000)
+
+    with open('processed_image.jpg', 'wb') as f:
+        f.write(processed_data)
+
+    writer.close()
+    await writer.wait_closed()
+
+
+# Run the client with the example image
+asyncio.run(send_image('/home/dino/PycharmProjects/compu2/tp2/pikachu.jpeg'))

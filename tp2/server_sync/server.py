@@ -1,56 +1,29 @@
 import socketserver
-import logging
-from tp2.server_sync.image_processing import scale_image
-import struct
+from multiprocessing import Process
+from PIL import Image
+import io
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def resize_image(data, scale_factor=0.5):
+    image = Image.open(io.BytesIO(data))
+    width, height = image.size
+    resized_image = image.resize((int(width * scale_factor), int(height * scale_factor)))
+    output = io.BytesIO()
+    resized_image.save(output, format='JPEG')
+    output.seek(0)
+    return output.read()
 
 class ImageRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        try:
-            logging.info("Handling new request from %s", self.client_address)
-            data = b""
-            while True:
-                packet = self.request.recv(4096)
-                if not packet:
-                    break
-                data += packet
-            logging.info("Data received from client: %d bytes", len(data))
-
-            if len(data) < 4:
-                logging.error("Received data is too short to contain a scale factor")
-                return
-
-            # Extract scale factor and image data
-            scale_factor = struct.unpack('f', data[:4])[0]
-            image_data = data[4:]
-            logging.info("Extracted scale factor: %f", scale_factor)
-
-            if not image_data:
-                logging.error("No image data received after scale factor")
-                return
-
-            # Process the image
-            scaled_image = scale_image(image_data, scale_factor)
-            logging.info("Image scaling complete")
-
-            # Send scaled image back to client
-            self.request.sendall(scaled_image)
-            logging.info("Scaled image sent to client")
-
-        except Exception as e:
-            logging.error("Error in processing request: %s", e)
+        data = self.request.recv(10000)
+        resized_image_data = resize_image(data)
+        self.request.sendall(resized_image_data)
 
 def start_sync_server():
-    try:
-        with socketserver.ThreadingTCPServer(('0.0.0.0', 8888), ImageRequestHandler) as server:
-            logging.info("Sync server running on port 8888")
-            server.serve_forever()
-    except OSError as e:
-        if e.errno == 98:
-            logging.error("Port 8888 is already in use")
-        else:
-            raise
+    process = Process(target=run_sync_server)
+    process.start()
 
-if __name__ == "__main__":
-    start_sync_server()
+def run_sync_server():
+    with socketserver.TCPServer(('localhost', 8888), ImageRequestHandler) as server:
+        print("Sync server started on localhost:8888")
+        server.serve_forever()
