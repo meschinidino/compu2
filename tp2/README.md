@@ -1,13 +1,14 @@
 # Trabajo práctico #2
 
+## Alumno: Dino Meschini
+## Legajo: 62323
+
 ### Para correr este programa:
 
 - Clonar el repositorio
 - Instalar las dependencias con `pip install -r requirements.txt`
-- Correr el servidor sincronico con `python -m server_sync.server`
-- Correr servidor asincrono con `python main.py -i 127.0.0.1 -p 8080`
-- Enviar una imagen al servidor con `curl -X POST -F "image=@/ruta/a/la/imagen.jpeg" http://127.0.0.1:8080/process`
-- Para conocer el estado de la solicitud: `curl http://127.0.0.1:8080/status/\{task_id\}`
+- Correr el servidor sincronico con `python3 main.py -i 127.0.0.1 -p 8000`
+- Correr el cliente y establecer una ruta de imagen para la imagen deseada ej: compu2/tp2/facebook.png
+- Imagen guardada como processed_image.jpg
 
-curl -X POST -F "image=@/home/dino/PycharmProjects/compu2/tp2/fallout.jpeg" http://127.0.0.1:8080/process --output processed_image.jpg
-
+- Si la imagen tiene una resolución muy alta, se generan problemas, usar imagenes de resolución baja 

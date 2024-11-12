@@ -18,4 +18,4 @@ async def send_image(image_path):
 
 
 # Run the client with the example image
-asyncio.run(send_image('/home/dino/PycharmProjects/compu2/tp2/pikachu.jpeg'))
+asyncio.run(send_image('/home/dino/PycharmProjects/compu2/tp2/facebook.png'))
